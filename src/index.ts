@@ -16,7 +16,7 @@ export class FaceBookChatBotModule {
     this.commands.set(bot.command, bot);
   }
 
-  private register(eventSourceAdapter: EventSourceAdapter, commandList: string[]) {
+  register(eventSourceAdapter: EventSourceAdapter, commandList: string[]) {
     const eventSource: EventSource = eventSourceAdapter.getEventSource();
     const videoId: string = eventSourceAdapter.getVideoId();
     const filteredCommands = commandList.filter((command) => this.commands.has(command));
@@ -33,7 +33,7 @@ export class FaceBookChatBotModule {
     };
   }
 
-  private registerAll(eventSourceAdapter: EventSourceAdapter) {
+  registerAll(eventSourceAdapter: EventSourceAdapter) {
     this.register(eventSourceAdapter, Array.from(this.commands.keys()));
   }
 }

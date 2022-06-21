@@ -3,13 +3,6 @@ import EventSource from 'eventsource';
 const defaultFields: string = 'from,message,attachment,message_tags,created_time';
 const defaultRate: string = 'ten_per_second';
 
-export interface EventSourceFactoryParams {
-  videoId: string;
-  accessToken: string;
-  fields: string;
-  rate: string;
-}
-
 export class EventSourceAdapter {
   eventSource: EventSource;
   videoId: string;
@@ -35,3 +28,10 @@ export class EventSourceAdapter {
     return this.videoId;
   }
 }
+
+export interface EventSourceFactoryParams {
+    videoId: string;
+    accessToken: string;
+    fields: string;
+    rate: string;
+  }
