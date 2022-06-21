@@ -1,11 +1,11 @@
 {
   "name": "fb-live-stream-chatbot-module",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "Module to read and write to facebook live streams",
   "main": "lib/index.js",
   "types": "lib/index.d.ts",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1",
+    "test": "",
     "build": "tsc",
     "format": "prettier --write \"src/**/*.ts\"",
     "lint": "tslint -p tsconfig.json",
