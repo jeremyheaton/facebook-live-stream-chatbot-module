@@ -1,9 +1,9 @@
 import { debug } from 'console';
 import EventSource from 'eventsource';
-import { EventSourceAdapter } from './EventSourceAdapter';
+import { EventSourceAdapter, EventSourceFactoryParams } from './EventSourceAdapter';
 import { FaceBookChatBot } from './FaceBookChatBot';
 
-export class FaceBookChatBotModule {
+class FaceBookChatBotModule {
   chatBot: FaceBookChatBot[] = [];
   commands: Map<string, FaceBookChatBot> = new Map<string, FaceBookChatBot>();
   eventSources: Map<string, EventSource> = new Map<string, EventSource>();
@@ -37,3 +37,5 @@ export class FaceBookChatBotModule {
     this.register(eventSourceAdapter, Array.from(this.commands.keys()));
   }
 }
+
+export { FaceBookChatBot, FaceBookChatBotModule, EventSourceAdapter, EventSourceFactoryParams };
