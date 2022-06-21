@@ -32,6 +32,6 @@ export class EventSourceAdapter {
 export interface EventSourceFactoryParams {
     videoId: string;
     accessToken: string;
-    fields: string;
-    rate: string;
+    fields?: string;
+    rate?: string;
   }
