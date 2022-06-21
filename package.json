@@ -2,19 +2,32 @@
   "name": "fb-live-stream-chatbot-module",
   "version": "1.0.0",
   "description": "Module to read and write to facebook live streams",
-  "main": "index.ts",
+  "main": "lib/index.js",
+  "types": "lib/index.d.ts",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "build": "tsc"
+    "build": "tsc",
+    "format": "prettier --write \"src/**/*.ts\"",
+    "lint": "tslint -p tsconfig.json",
+    "prepare" : "npm run build",
+    "prepublishOnly" : "npm test && npm run lint",
+    "preversion" : "npm run lint",
+    "version" : "npm run format && git add -A src",
+    "postversion" : "git push && git push --tags"
   },
   "author": "jeremy heaton",
   "license": "ISC",
   "devDependencies": {
     "@types/eventsource": "^1.1.8",
     "@types/node": "^18.0.0",
+    "prettier": "^2.7.1",
+    "tslint": "^6.1.3",
+    "tslint-config-prettier": "^1.18.0",
     "typescript": "^4.7.4"
   },
   "dependencies": {
     "eventsource": "^2.0.2"
-  }
+  },
+  "files": ["lib/**/*"],
+  "keywords": ["facebook", "facebook live video", "facebook streaming"]
 }
