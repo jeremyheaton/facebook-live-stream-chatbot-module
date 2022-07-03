@@ -1,41 +1,66 @@
-import { debug } from 'console';
+import {debug} from 'console';
 import EventSource from 'eventsource';
-import { EventSourceAdapter, EventSourceFactoryParams } from './EventSourceAdapter';
-import { FaceBookChatBot } from './FaceBookChatBot';
+import { BlackJackBotFactory } from './bots/BlackJack/BlackJackChatBot';
+import { ChatBotCommand } from './ChatBotCommand';
+import {EventSourceAdapter, EventSourceFactoryParams} from './EventSourceAdapter';
+import {FaceBookChatBot} from './FaceBookChatBot';
+import {FaceBookChatBotFactory} from './FaceBookChatBotFactory';
 
 class FaceBookChatBotModule {
-  chatBot: FaceBookChatBot[] = [];
-  commands: Map<string, FaceBookChatBot> = new Map<string, FaceBookChatBot>();
-  eventSources: Map<string, EventSource> = new Map<string, EventSource>();
 
-  install(bot: FaceBookChatBot) {
-    if (this.commands.has(bot.command)) {
-      throw Error('command has already be installed');
+    commands : Map<string, FaceBookChatBot> = new Map<string, FaceBookChatBot>();
+    eventSources : Map<string, EventSource> = new Map<string, EventSource>();
+    chatBotFactoryMap : Map<string, FaceBookChatBotFactory> =
+        new Map<string, FaceBookChatBotFactory>();
+    eventSourceBotMap : Map<string, FaceBookChatBot[]> = new Map<string, FaceBookChatBot[]>();
+
+    install(botFactory : FaceBookChatBotFactory) {
+        this.chatBotFactoryMap.set(botFactory.name, botFactory);
     }
-    this.chatBot.push(bot);
-    this.commands.set(bot.command, bot);
-  }
 
-  register(eventSourceAdapter: EventSourceAdapter, commandList: string[]) {
-    const eventSource: EventSource = eventSourceAdapter.getEventSource();
-    const videoId: string = eventSourceAdapter.getVideoId();
-    const filteredCommands = commandList.filter((command) => this.commands.has(command));
-    this.eventSources.set(videoId, eventSource);
+    registerBot(name: string, videoId: string, accessToken: string) {
+        if (!this.eventSources.get(videoId)) {
+            throw new Error("video not registered");
+        }
+        let bot = this.chatBotFactoryMap.get(name)?.createBot(videoId, accessToken);
+        if (bot) {
+            this.eventSourceBotMap.get(videoId)?.push(bot);
+        }
+        return this;
+    }
 
-    eventSource.onmessage = (event) => {
-      filteredCommands.some((command) => this.commands.get(command)?.chatBot(event));
-    };
+    registerAllBots(videoId: string, accessToken: string) {
+        this.chatBotFactoryMap.forEach(chatBotFactoryMap => 
+            this.registerBot(chatBotFactoryMap.name, videoId, accessToken))
+    }
 
-    eventSource.onerror = (event: Event) => {
-      debug(event);
-      eventSource.close();
-      this.eventSources.delete(videoId);
-    };
-  }
+    registerEventSource(eventSourceAdapter : EventSourceAdapter) {
+        const eventSource: EventSource = eventSourceAdapter.getEventSource();
+        const videoId: string = eventSourceAdapter.getVideoId();
+        this.eventSources.set(videoId, eventSource);
+        this.eventSourceBotMap.set(videoId, []);
+        eventSource.onmessage = (event) => {
+            debug(event);
+            this.eventSourceBotMap.get(videoId)?.forEach(bot => {
+                bot.processCommand(event.data.message.exec("^(![^\s]+)"), event);
+            })
+        };
 
-  registerAll(eventSourceAdapter: EventSourceAdapter) {
-    this.register(eventSourceAdapter, Array.from(this.commands.keys()));
-  }
+        eventSource.onerror = (event : Event) => {
+            debug(event);
+            eventSource.close();
+            this.eventSources.delete(videoId);
+            this.eventSourceBotMap.delete(videoId);
+        };
+    }
 }
 
-export { FaceBookChatBot, FaceBookChatBotModule, EventSourceAdapter, EventSourceFactoryParams };
+export {
+    FaceBookChatBot,
+    FaceBookChatBotModule,
+    EventSourceAdapter,
+    EventSourceFactoryParams,
+    FaceBookChatBotFactory,
+    ChatBotCommand,
+    BlackJackBotFactory
+};
