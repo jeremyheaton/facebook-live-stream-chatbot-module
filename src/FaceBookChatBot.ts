@@ -1,7 +1,7 @@
-// The interface that the chat bots must follow
+/** The interface that the chat bots must follow */ 
 import { ChatBotCommand } from './ChatBotCommand';
 export class FaceBookChatBot {
-  name: String;
+  name: string;
   commandMap!: Map<string, ChatBotCommand>;
   videoId: string;
   accessToken: string;

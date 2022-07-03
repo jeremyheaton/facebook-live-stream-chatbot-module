@@ -1,26 +1,20 @@
-const blackJack = require('./blackjack');
+import BlackJackGame from './BlackJackGame';
 import axios from 'axios';
 import { FaceBookChatBot } from '../..';
-import { FaceBookChatBotFactory } from '../../FaceBookChatBotFactory';
+import { debug } from 'util';
 
-export class BlackJackBotFactory extends FaceBookChatBotFactory {
-  createBot(videoId: string, accessToken: string) {
-    return new BlackJackBot(super.name, videoId, accessToken);
-  }
-}
-
-class BlackJackBot extends FaceBookChatBot {
+export class BlackJackBot extends FaceBookChatBot {
   bjGames = new Map();
   constructor(name: string, videoId: string, accessToken: string) {
     super(name, videoId, accessToken);
     this.commandMap.set('!blackjack', {
-      chatBot: (event: MessageEvent, videoId: string, accessToken: string) => this.startGameCommand(event),
+      chatBot: (event: MessageEvent) => this.startGameCommand(event),
     });
     this.commandMap.set('!stand', {
-      chatBot: (event: MessageEvent, videoId: string, accessToken: string) => this.standCommand(event),
+      chatBot: (event: MessageEvent) => this.standCommand(event),
     });
     this.commandMap.set('!hit', {
-      chatBot: (event: MessageEvent, videoId: string, accessToken: string) => this.hitCommand(event),
+      chatBot: (event: MessageEvent) => this.hitCommand(event),
     });
   }
 
@@ -37,11 +31,11 @@ class BlackJackBot extends FaceBookChatBot {
           },
         },
       )
-      .then(function (response) {
-        console.log(response);
+      .then((response) => {
+        debug(response.data);
       })
-      .catch(function (error) {
-        console.log(error);
+      .catch((error) => {
+        debug(error);
       });
   }
 
@@ -63,8 +57,8 @@ class BlackJackBot extends FaceBookChatBot {
         } else if (element.s === 3) {
           dec = 127136 + element.n;
         }
-        let card_unicode: any = '0x' + dec.toString(16);
-        pcards = pcards + String.fromCodePoint(card_unicode) + ' ';
+        const cardUnicode: any = '0x' + dec.toString(16);
+        pcards = pcards + String.fromCodePoint(cardUnicode) + ' ';
       }
     });
     return pcards;
@@ -77,25 +71,24 @@ class BlackJackBot extends FaceBookChatBot {
   };
 
   startGameCommand = (event: MessageEvent) => {
-    let obj = JSON.parse(event.data);
-    console.log(obj);
-    let user_id = obj.from.id;
-    let user_name = obj.from.name;
-    let myArray = obj.message.split(' ');
+    const obj = JSON.parse(event.data);
+    const userId = obj.from.id;
+    const userName = obj.from.name;
+    const myArray = obj.message.split(' ');
     let bet = 25;
-    if (!this.bjGames.get(user_id)) {
+    if (!this.bjGames.get(userId)) {
       // Game doesn't exist yet
       if (myArray[1]) {
         bet = myArray[1];
       }
-      this.bjGames.set(user_id, blackJack.getGameObject());
-      this.bjGames.get(user_id).start(bet);
-      let result = this.bjGames.get(user_id).check().winner;
+      this.bjGames.set(userId, BlackJackGame());
+      this.bjGames.get(userId).start(bet);
+      const result = this.bjGames.get(userId).check().winner;
       if (result === null) {
         // No winner yet
-        let pcards = this.getUnicodeCards(this.bjGames.get(user_id).player);
-        let dcards = this.getUnicodeCards(this.bjGames.get(user_id).dealer, 1);
-        let showing = this.bjGames.get(user_id).dealer[1].n;
+        const pcards = this.getUnicodeCards(this.bjGames.get(userId).player);
+        const dcards = this.getUnicodeCards(this.bjGames.get(userId).dealer, 1);
+        let showing = this.bjGames.get(userId).dealer[1].n;
         if (showing === 1) {
           showing = 'Ace';
         } else if (showing === 11) {
@@ -112,87 +105,87 @@ class BlackJackBot extends FaceBookChatBot {
             'showing ' +
             showing +
             '\n' +
-            user_name +
+            userName +
             ': ' +
             pcards +
-            this.bjGames.get(user_id).ppoints +
+            this.bjGames.get(userId).ppoints +
             ' - !hit or !stand',
         });
         this.sendMessage(data);
       } else if (result === 0) {
-        let pcards = this.getUnicodeCards(this.bjGames.get(user_id).player);
-        let dcards = this.getUnicodeCards(this.bjGames.get(user_id).dealer);
+        const pcards = this.getUnicodeCards(this.bjGames.get(userId).player);
+        const dcards = this.getUnicodeCards(this.bjGames.get(userId).dealer);
         const data = JSON.stringify({
           message:
             'Dealer: ' +
             dcards +
-            this.bjGames.get(user_id).dpoints +
+            this.bjGames.get(userId).dpoints +
             '\n' +
-            user_name +
+            userName +
             ': ' +
             pcards +
-            this.bjGames.get(user_id).ppoints +
+            this.bjGames.get(userId).ppoints +
             ' - ' +
-            this.bjGames.get(user_id).check().message +
+            this.bjGames.get(userId).check().message +
             ' +' +
-            this.bjGames.get(user_id).amount_bet +
+            this.bjGames.get(userId).amount_bet +
             'px',
         });
         this.sendMessage(data);
         const command = JSON.stringify({
-          message: '!pixels add ' + user_name + ' ' + this.bjGames.get(user_id).amount_bet,
+          message: '!pixels add ' + userName + ' ' + this.bjGames.get(userId).amount_bet,
         });
         this.sendMessage(command);
-        this.bjGames.delete(user_id);
+        this.bjGames.delete(userId);
       } else if (result === 1) {
-        let pcards = this.getUnicodeCards(this.bjGames.get(user_id).player);
-        let dcards = this.getUnicodeCards(this.bjGames.get(user_id).dealer);
+        const pcards = this.getUnicodeCards(this.bjGames.get(userId).player);
+        const dcards = this.getUnicodeCards(this.bjGames.get(userId).dealer);
         const data = JSON.stringify({
           message:
             'Dealer: ' +
             dcards +
-            this.bjGames.get(user_id).dpoints +
+            this.bjGames.get(userId).dpoints +
             ' - ' +
-            this.bjGames.get(user_id).check().message +
+            this.bjGames.get(userId).check().message +
             ' -' +
-            this.bjGames.get(user_id).amount_bet +
+            this.bjGames.get(userId).amount_bet +
             'px' +
             '\n' +
-            user_name +
+            userName +
             ': ' +
             pcards +
-            this.bjGames.get(user_id).ppoints,
+            this.bjGames.get(userId).ppoints,
         });
         this.sendMessage(data);
         const command = JSON.stringify({
-          message: '!pixels remove ' + user_name + ' ' + this.bjGames.get(user_id).amount_bet,
+          message: '!pixels remove ' + userName + ' ' + this.bjGames.get(userId).amount_bet,
         });
         this.sendMessage(command);
-        this.bjGames.delete(user_id);
+        this.bjGames.delete(userId);
       } else if (result === 2) {
-        let pcards = this.getUnicodeCards(this.bjGames.get(user_id).player);
-        let dcards = this.getUnicodeCards(this.bjGames.get(user_id).dealer);
+        const pcards = this.getUnicodeCards(this.bjGames.get(userId).player);
+        const dcards = this.getUnicodeCards(this.bjGames.get(userId).dealer);
         const data = JSON.stringify({
           message:
             'Dealer: ' +
             dcards +
-            this.bjGames.get(user_id).dpoints +
+            this.bjGames.get(userId).dpoints +
             ' - ' +
-            this.bjGames.get(user_id).check().message +
+            this.bjGames.get(userId).check().message +
             '\n' +
-            user_name +
+            userName +
             ': ' +
             pcards +
-            this.bjGames.get(user_id).ppoints,
+            this.bjGames.get(userId).ppoints,
         });
         this.sendMessage(data);
-        this.bjGames.delete(user_id);
+        this.bjGames.delete(userId);
       }
     } else {
       // Player is already in a game
-      let pcards = this.getUnicodeCards(this.bjGames.get(user_id).player);
-      let dcards = this.getUnicodeCards(this.bjGames.get(user_id).dealer, 1);
-      let showing = this.bjGames.get(user_id).dealer[1].n;
+      const pcards = this.getUnicodeCards(this.bjGames.get(userId).player);
+      const dcards = this.getUnicodeCards(this.bjGames.get(userId).dealer, 1);
+      let showing = this.bjGames.get(userId).dealer[1].n;
       if (showing === 1) {
         showing = 'Ace';
       } else if (showing === 11) {
@@ -209,10 +202,10 @@ class BlackJackBot extends FaceBookChatBot {
           'showing ' +
           showing +
           '\n' +
-          user_name +
+          userName +
           ': ' +
           pcards +
-          this.bjGames.get(user_id).ppoints +
+          this.bjGames.get(userId).ppoints +
           ' - !hit or !stand',
       });
       this.sendMessage(data);
@@ -220,41 +213,39 @@ class BlackJackBot extends FaceBookChatBot {
   };
 
   hitCommand(event: MessageEvent) {
-    let obj = JSON.parse(event.data);
-    console.log(obj);
-    let user_id = obj.from.id;
-    let user_name = obj.from.name;
-    let myArray = obj.message.split(' ');
-    if (!this.bjGames.get(user_id)) {
+    const obj = JSON.parse(event.data);
+    const userId = obj.from.id;
+    const userName = obj.from.name;
+    if (!this.bjGames.get(userId)) {
       // Game doesn't exist
       const data = JSON.stringify({ message: 'Type !blackjack to start a game.' });
       this.sendMessage(data);
     } else {
       // Player is already in a game
-      if (this.bjGames.get(user_id).turn === 1) {
-        let pcards = this.getUnicodeCards(this.bjGames.get(user_id).player);
-        let dcards = this.getUnicodeCards(this.bjGames.get(user_id).dealer);
+      if (this.bjGames.get(userId).turn === 1) {
+        const pcards = this.getUnicodeCards(this.bjGames.get(userId).player);
+        const dcards = this.getUnicodeCards(this.bjGames.get(userId).dealer);
         const data = JSON.stringify({
           message:
             'Dealer: ' +
             dcards +
-            this.bjGames.get(user_id).dpoints +
+            this.bjGames.get(userId).dpoints +
             '\n' +
-            user_name +
+            userName +
             ': ' +
             pcards +
-            this.bjGames.get(user_id).ppoints +
+            this.bjGames.get(userId).ppoints +
             ' - Not your turn.',
         });
         this.sendMessage(data);
       } else {
-        this.bjGames.get(user_id).hit();
-        let result = this.bjGames.get(user_id).check().winner;
+        this.bjGames.get(userId).hit();
+        const result = this.bjGames.get(userId).check().winner;
         if (result === null) {
           // No winner yet
-          let pcards = this.getUnicodeCards(this.bjGames.get(user_id).player);
-          let dcards = this.getUnicodeCards(this.bjGames.get(user_id).dealer, 1);
-          let showing = this.bjGames.get(user_id).dealer[1].n;
+          const pcards = this.getUnicodeCards(this.bjGames.get(userId).player);
+          const dcards = this.getUnicodeCards(this.bjGames.get(userId).dealer, 1);
+          let showing = this.bjGames.get(userId).dealer[1].n;
           if (showing === 1) {
             showing = 'Ace';
           } else if (showing === 11) {
@@ -271,121 +262,120 @@ class BlackJackBot extends FaceBookChatBot {
               'showing ' +
               showing +
               '\n' +
-              user_name +
+              userName +
               ': ' +
               pcards +
-              this.bjGames.get(user_id).ppoints +
+              this.bjGames.get(userId).ppoints +
               ' - !hit or !stand',
           });
           this.sendMessage(data);
         } else if (result === 0) {
-          let pcards = this.getUnicodeCards(this.bjGames.get(user_id).player);
-          let dcards = this.getUnicodeCards(this.bjGames.get(user_id).dealer);
+          const pcards = this.getUnicodeCards(this.bjGames.get(userId).player);
+          const dcards = this.getUnicodeCards(this.bjGames.get(userId).dealer);
           const data = JSON.stringify({
             message:
               'Dealer: ' +
               dcards +
-              this.bjGames.get(user_id).dpoints +
+              this.bjGames.get(userId).dpoints +
               '\n' +
-              user_name +
+              userName +
               ': ' +
               pcards +
-              this.bjGames.get(user_id).ppoints +
+              this.bjGames.get(userId).ppoints +
               ' - ' +
-              this.bjGames.get(user_id).check().message +
+              this.bjGames.get(userId).check().message +
               ' +' +
-              this.bjGames.get(user_id).amount_bet +
+              this.bjGames.get(userId).amount_bet +
               'px',
           });
           this.sendMessage(data);
           const command = JSON.stringify({
-            message: '!pixels add ' + user_name + ' ' + this.bjGames.get(user_id).amount_bet,
+            message: '!pixels add ' + userName + ' ' + this.bjGames.get(userId).amount_bet,
           });
           this.sendMessage(command);
-          this.bjGames.delete(user_id);
+          this.bjGames.delete(userId);
         } else if (result === 1) {
-          let pcards = this.getUnicodeCards(this.bjGames.get(user_id).player);
-          let dcards = this.getUnicodeCards(this.bjGames.get(user_id).dealer);
+          const pcards = this.getUnicodeCards(this.bjGames.get(userId).player);
+          const dcards = this.getUnicodeCards(this.bjGames.get(userId).dealer);
           const data = JSON.stringify({
             message:
               'Dealer: ' +
               dcards +
-              this.bjGames.get(user_id).dpoints +
+              this.bjGames.get(userId).dpoints +
               ' - ' +
-              this.bjGames.get(user_id).check().message +
+              this.bjGames.get(userId).check().message +
               ' -' +
-              this.bjGames.get(user_id).amount_bet +
+              this.bjGames.get(userId).amount_bet +
               'px' +
               '\n' +
-              user_name +
+              userName +
               ': ' +
               pcards +
-              this.bjGames.get(user_id).ppoints,
+              this.bjGames.get(userId).ppoints,
           });
           this.sendMessage(data);
           const command = JSON.stringify({
-            message: '!pixels remove ' + user_name + ' ' + this.bjGames.get(user_id).amount_bet,
+            message: '!pixels remove ' + userName + ' ' + this.bjGames.get(userId).amount_bet,
           });
           this.sendMessage(command);
-          this.bjGames.delete(user_id);
+          this.bjGames.delete(userId);
         } else if (result === 2) {
-          let pcards = this.getUnicodeCards(this.bjGames.get(user_id).player);
-          let dcards = this.getUnicodeCards(this.bjGames.get(user_id).dealer);
+          const pcards = this.getUnicodeCards(this.bjGames.get(userId).player);
+          const dcards = this.getUnicodeCards(this.bjGames.get(userId).dealer);
           const data = JSON.stringify({
             message:
               'Dealer: ' +
               dcards +
-              this.bjGames.get(user_id).dpoints +
+              this.bjGames.get(userId).dpoints +
               ' - ' +
-              this.bjGames.get(user_id).check().message +
+              this.bjGames.get(userId).check().message +
               '\n' +
-              user_name +
+              userName +
               ': ' +
               pcards +
-              this.bjGames.get(user_id).ppoints,
+              this.bjGames.get(userId).ppoints,
           });
           this.sendMessage(data);
-          this.bjGames.delete(user_id);
+          this.bjGames.delete(userId);
         }
       }
     }
   }
   standCommand(event: MessageEvent) {
-    let obj = JSON.parse(event.data);
-    console.log(obj);
-    let user_id = obj.from.id;
-    let user_name = obj.from.name;
-    let myArray = obj.message.split(' ');
-    if (!this.bjGames.get(user_id)) {
+    const obj = JSON.parse(event.data);
+    debug(obj);
+    const userId = obj.from.id;
+    const userName = obj.from.name;
+    if (!this.bjGames.get(userId)) {
       // Game doesn't exist
       const data = JSON.stringify({ message: 'Type !blackjack to start a game.' });
       this.sendMessage(data);
     } else {
       // Player is already in a game
-      if (this.bjGames.get(user_id).turn === 1) {
-        let pcards = this.getUnicodeCards(this.bjGames.get(user_id).player);
-        let dcards = this.getUnicodeCards(this.bjGames.get(user_id).dealer);
+      if (this.bjGames.get(userId).turn === 1) {
+        const pcards = this.getUnicodeCards(this.bjGames.get(userId).player);
+        const dcards = this.getUnicodeCards(this.bjGames.get(userId).dealer);
         const data = JSON.stringify({
           message:
             'Dealer: ' +
             dcards +
-            this.bjGames.get(user_id).dpoints +
+            this.bjGames.get(userId).dpoints +
             '\n' +
-            user_name +
+            userName +
             ': ' +
             pcards +
-            this.bjGames.get(user_id).ppoints +
+            this.bjGames.get(userId).ppoints +
             ' - Not your turn.',
         });
         this.sendMessage(data);
       } else {
-        this.bjGames.get(user_id).stand();
-        let result = this.bjGames.get(user_id).check().winner;
+        this.bjGames.get(userId).stand();
+        const result = this.bjGames.get(userId).check().winner;
         if (result === null) {
           // No winner yet
-          let pcards = this.getUnicodeCards(this.bjGames.get(user_id).player);
-          let dcards = this.getUnicodeCards(this.bjGames.get(user_id).dealer, 1);
-          let showing = this.bjGames.get(user_id).dealer[1].n;
+          const pcards = this.getUnicodeCards(this.bjGames.get(userId).player);
+          const dcards = this.getUnicodeCards(this.bjGames.get(userId).dealer, 1);
+          let showing = this.bjGames.get(userId).dealer[1].n;
           if (showing === 1) {
             showing = 'Ace';
           } else if (showing === 11) {
@@ -402,81 +392,81 @@ class BlackJackBot extends FaceBookChatBot {
               'showing ' +
               showing +
               '\n' +
-              user_name +
+              userName +
               ': ' +
               pcards +
-              this.bjGames.get(user_id).ppoints +
+              this.bjGames.get(userId).ppoints +
               ' - !hit or !stand',
           });
           this.sendMessage(data);
         } else if (result === 0) {
-          let pcards = this.getUnicodeCards(this.bjGames.get(user_id).player);
-          let dcards = this.getUnicodeCards(this.bjGames.get(user_id).dealer);
+          const pcards = this.getUnicodeCards(this.bjGames.get(userId).player);
+          const dcards = this.getUnicodeCards(this.bjGames.get(userId).dealer);
           const data = JSON.stringify({
             message:
               'Dealer: ' +
               dcards +
-              this.bjGames.get(user_id).dpoints +
+              this.bjGames.get(userId).dpoints +
               '\n' +
-              user_name +
+              userName +
               ': ' +
               pcards +
-              this.bjGames.get(user_id).ppoints +
+              this.bjGames.get(userId).ppoints +
               ' - ' +
-              this.bjGames.get(user_id).check().message +
+              this.bjGames.get(userId).check().message +
               ' +' +
-              this.bjGames.get(user_id).amount_bet +
+              this.bjGames.get(userId).amount_bet +
               'px',
           });
           this.sendMessage(data);
           const command = JSON.stringify({
-            message: '!pixels add ' + user_name + ' ' + this.bjGames.get(user_id).amount_bet,
+            message: '!pixels add ' + userName + ' ' + this.bjGames.get(userId).amount_bet,
           });
           this.sendMessage(command);
-          this.bjGames.delete(user_id);
+          this.bjGames.delete(userId);
         } else if (result === 1) {
-          let pcards = this.getUnicodeCards(this.bjGames.get(user_id).player);
-          let dcards = this.getUnicodeCards(this.bjGames.get(user_id).dealer);
+          const pcards = this.getUnicodeCards(this.bjGames.get(userId).player);
+          const dcards = this.getUnicodeCards(this.bjGames.get(userId).dealer);
           const data = JSON.stringify({
             message:
               'Dealer: ' +
               dcards +
-              this.bjGames.get(user_id).dpoints +
+              this.bjGames.get(userId).dpoints +
               ' - ' +
-              this.bjGames.get(user_id).check().message +
+              this.bjGames.get(userId).check().message +
               ' -' +
-              this.bjGames.get(user_id).amount_bet +
+              this.bjGames.get(userId).amount_bet +
               'px' +
               '\n' +
-              user_name +
+              userName +
               ': ' +
               pcards +
-              this.bjGames.get(user_id).ppoints,
+              this.bjGames.get(userId).ppoints,
           });
           this.sendMessage(data);
           const command = JSON.stringify({
-            message: '!pixels remove ' + user_name + ' ' + this.bjGames.get(user_id).amount_bet,
+            message: '!pixels remove ' + userName + ' ' + this.bjGames.get(userId).amount_bet,
           });
           this.sendMessage(command);
-          this.bjGames.delete(user_id);
+          this.bjGames.delete(userId);
         } else if (result === 2) {
-          let pcards = this.getUnicodeCards(this.bjGames.get(user_id).player);
-          let dcards = this.getUnicodeCards(this.bjGames.get(user_id).dealer);
+          const pcards = this.getUnicodeCards(this.bjGames.get(userId).player);
+          const dcards = this.getUnicodeCards(this.bjGames.get(userId).dealer);
           const data = JSON.stringify({
             message:
               'Dealer: ' +
               dcards +
-              this.bjGames.get(user_id).dpoints +
+              this.bjGames.get(userId).dpoints +
               ' - ' +
-              this.bjGames.get(user_id).check().message +
+              this.bjGames.get(userId).check().message +
               '\n' +
-              user_name +
+              userName +
               ': ' +
               pcards +
-              this.bjGames.get(user_id).ppoints,
+              this.bjGames.get(userId).ppoints,
           });
           this.sendMessage(data);
-          this.bjGames.delete(user_id);
+          this.bjGames.delete(userId);
         }
       }
     }

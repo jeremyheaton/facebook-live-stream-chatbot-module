@@ -23,9 +23,8 @@ const newGame = () => {
     amount_bet: 25,        // amount bet
   
     // (B) INITIALIZE GAME
-    init : () => {
-
-    },
+    // init : () => {
+    // },
   
     // (C) START NEW GAME
     start : (bet) => {
@@ -57,7 +56,7 @@ const newGame = () => {
       bj.turn = 0; bj.points();
       bj.turn = 1; bj.points();
       var winner = bj.check().winner;
-      if (winner==null) { bj.turn = 0; }
+      if (winner===null) { bj.turn = 0; }
     },
   
     // (D) DRAW A CARD FROM THE DECK
@@ -65,13 +64,13 @@ const newGame = () => {
     dnum : { 1 : "A", 11 : "J", 12 : "Q", 13 : "K" }, // Card numbers
     draw : () => {
       // (D1) TAKE LAST CARD FROM DECK + CREATE HTML
-      var card = bj.deck.pop(),
-          cardv = (bj.dnum[card.n] ? bj.dnum[card.n] : card.n) + bj.dsymbols[card.s];
+      var card = bj.deck.pop();
+      var cardv = (bj.dnum[card.n] ? bj.dnum[card.n] : card.n) + bj.dsymbols[card.s];
   
       // (D2) DEALER'S CARD
       // NOTE : HIDE FIRST DEALER CARD
       if (bj.turn) {
-        if (bj.dealer.length==0) {
+        if (bj.dealer.length===0) {
           //cardh.id = "deal-first";
           //cardh.innerHTML = `<div class="back">?</div><div class="front">${cardv}</div>`;
         }
@@ -91,16 +90,17 @@ const newGame = () => {
       // (E1) RUN THROUGH CARDS
       // TAKE CARDS 1-10 AT FACE VALUE + J, Q, K AT 10 POINTS.
       // DON'T CALCULATE ACES YET, THEY CAN EITHER BE 1 OR 11.
-      var aces = 0, points = 0;
+      var aces = 0;
+      var points = 0;
       for (let i of (bj.turn ? bj.dealer : bj.player)) {
-        if (i.n == 1) { aces++; }
+        if (i.n === 1) { aces++; }
         else if (i.n>=11 && i.n<=13) { points += 10; }
         else { points += i.n; }
       }
   
       // (E2) CALCULATIONS FOR ACES
       // NOTE: FOR MULTIPLE ACES, WE CALCULATE ALL POSSIBLE POINTS AND TAKE HIGHEST.
-      if (aces!=0) {
+      if (aces!==0) {
         var minmax = [];
         for (let elevens=0; elevens<=aces; elevens++) {
           let calc = points + (elevens * 11) + (aces-elevens * 1);
@@ -124,26 +124,27 @@ const newGame = () => {
     check : () => {
       // (F1) FLAGS
       // WINNER - 0 FOR PLAYER, 1 FOR DEALER, 2 FOR A TIE
-      var winner = null, message = "";
+      var winner = null;
+      var message = "";
   
       // (F2) BLACKJACK - WIN ON FIRST ROUND
-      if (bj.player.length==2 && bj.dealer.length==2) {
+      if (bj.player.length===2 && bj.dealer.length===2) {
         // TIE
-        if (bj.ppoints==21 && bj.dpoints==21) {
+        if (bj.ppoints===21 && bj.dpoints===21) {
           winner = 2; message = "It's a tie with Blackjacks";
         }
         // PLAYER WINS
-        if (winner==null && bj.ppoints==21) {
+        if (winner===null && bj.ppoints===21) {
           winner = 0; message = "Player wins with a Blackjack!";
         }
         // DEALER WINS
-        if (winner==null && bj.dpoints==21) {
+        if (winner===null && bj.dpoints===21) {
           winner = 1; message = "Dealer wins with a Blackjack!";
         }
       }
   
       // (F3) WHO GONE BUST?
-      if (winner == null) {
+      if (winner === null) {
         // PLAYER GONE BUST
         if (bj.ppoints>21) {
           winner = 1; message = "Player has gone bust - Dealer wins!";
@@ -155,7 +156,7 @@ const newGame = () => {
       }
   
       // (F4) POINTS CHECK - WHEN BOTH PLAYERS STAND
-      if (winner == null && bj.dstand && bj.pstand) {
+      if (winner === null && bj.dstand && bj.pstand) {
         // DEALER HAS MORE POINTS
         if (bj.dpoints > bj.ppoints) {
           winner = 1; message = "Dealer wins with " + bj.dpoints + " points!";
@@ -191,16 +192,16 @@ const newGame = () => {
       bj.draw(); bj.points();
   
        // (G2) AUTO-STAND ON 21 POINTS
-      if (bj.turn==0 && bj.ppoints==21 && !bj.pstand) {
+      if (bj.turn===0 && bj.ppoints===21 && !bj.pstand) {
         bj.pstand = true; //bj.hpstand.classList.add("stood");
       }
-      if (bj.turn==1 && bj.dpoints==21 && !bj.dstand) {
+      if (bj.turn===1 && bj.dpoints===21 && !bj.dstand) {
         bj.dstand = true; //bj.hdstand.classList.add("stood");
       }
   
       // (G3) CONTINUE GAME IF NO WINNER
       var winner = bj.check().winner;
-      if (winner==null) { bj.next(); }
+      if (winner===null) { bj.next(); }
     },
   
     // (H) STAND
@@ -214,16 +215,16 @@ const newGame = () => {
   
       // (H2) END GAME OR KEEP GOING?
       var winner = (bj.pstand && bj.dstand) ? bj.check().winner : null ;
-      if (winner==null) { bj.next(); }
+      if (winner===null) { bj.next(); }
     },
   
     // (I) WHO'S NEXT?
     next : () => {
       // (I1) UP NEXT...
-      bj.turn = (bj.turn==0 && bj.pstand) ? 1 : 0 ;
+      bj.turn = (bj.turn===0 && bj.pstand) ? 1 : 0 ;
   
       // (I2) DEALER IS NEXT
-      if (bj.turn==1) {
+      if (bj.turn===1) {
         if (bj.dstand) { bj.turn = 0; } // SKIP DEALER TURN IF STOOD
         else { bj.ai(); }
       }
@@ -244,10 +245,9 @@ const newGame = () => {
     }}
   };
   return bj;
-} 
-module.exports = {
-    getGameObject: function() {
-        return newGame();
-    }
- }
- 
+}
+
+const BlackJackGame = () => {
+  return newGame();
+}
+export default BlackJackGame;

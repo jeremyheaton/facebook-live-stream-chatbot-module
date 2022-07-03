@@ -20,7 +20,7 @@ class FaceBookChatBotModule {
     if (!this.eventSources.get(videoId)) {
       throw new Error('video not registered');
     }
-    let bot = this.chatBotFactoryMap.get(name)?.createBot(videoId, accessToken);
+    const bot = this.chatBotFactoryMap.get(name)?.createBot(videoId, accessToken);
     if (bot) {
       this.eventSourceBotMap.get(videoId)?.push(bot);
     }
