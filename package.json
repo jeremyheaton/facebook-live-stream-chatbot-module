@@ -1,6 +1,6 @@
 {
   "name": "fb-live-stream-chatbot-module",
-  "version": "1.0.4",
+  "version": "1.1.0",
   "description": "Module to read and write to facebook live streams",
   "main": "lib/index.js",
   "types": "lib/index.d.ts",

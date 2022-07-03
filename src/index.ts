@@ -1,6 +1,6 @@
 import { debug } from 'console';
 import EventSource from 'eventsource';
-import { BlackJackBotFactory } from './bots/BlackJack/BlackJackChatBot';
+import { BlackJackBotFactory } from './bots/BlackJack/BlackJackChatBotFactory';
 import { ChatBotCommand } from './ChatBotCommand';
 import { EventSourceAdapter, EventSourceFactoryParams } from './EventSourceAdapter';
 import { FaceBookChatBot } from './FaceBookChatBot';
