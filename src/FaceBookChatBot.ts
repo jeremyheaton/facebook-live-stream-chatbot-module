@@ -1,10 +1,10 @@
 // The interface that the chat bots must follow
-import { ChatBotCommand } from "./ChatBotCommand";
+import { ChatBotCommand } from './ChatBotCommand';
 export class FaceBookChatBot {
   name: String;
   commandMap!: Map<string, ChatBotCommand>;
   videoId: string;
-  accessToken:string;
+  accessToken: string;
   constructor(name: string, videoId: string, accessToken: string) {
     this.name = name;
     this.videoId = videoId;
@@ -12,7 +12,7 @@ export class FaceBookChatBot {
   }
 
   setCommandMap(commandMap: Map<string, ChatBotCommand>) {
-      this.commandMap = commandMap;
+    this.commandMap = commandMap;
   }
 
   processCommand(command: string, event: MessageEvent) {
