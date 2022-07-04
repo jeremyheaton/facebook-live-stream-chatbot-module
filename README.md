@@ -59,7 +59,7 @@ commandMap.set('!testCommand1', {
 commandMap.set('!testCommand2', {
     chatBot: (event: MessageEvent) => console.log("execute command2")
 });
-const newFactory = new FaceBookChatFactory('testBot')
+const newFactory = new FaceBookChatFactory('testBot', commandMap);
 ```
 
 ### Using the chat bot module
